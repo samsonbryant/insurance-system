@@ -212,6 +212,97 @@ app.get('/health', (req, res) => {
   });
 });
 
+// API base route - returns API information
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'Insurance Verification & Authentication System (IVAS) API',
+    version: '1.0.0',
+    status: 'running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    baseUrl: '/api',
+    endpoints: {
+      auth: {
+        path: '/api/auth',
+        methods: ['POST', 'GET'],
+        description: 'Authentication endpoints (login, refresh, logout)',
+        public: false
+      },
+      companies: {
+        path: '/api/companies',
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        description: 'Company management endpoints',
+        public: false
+      },
+      publicCompanies: {
+        path: '/api/companies/public',
+        methods: ['GET'],
+        description: 'Public companies list (no authentication required)',
+        public: true
+      },
+      policies: {
+        path: '/api/policies',
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        description: 'Policy management endpoints',
+        public: false
+      },
+      verifications: {
+        path: '/api/verifications',
+        methods: ['GET', 'POST'],
+        description: 'Verification management endpoints (authenticated)',
+        public: false
+      },
+      publicVerification: {
+        path: '/api/verifications/public',
+        methods: ['POST'],
+        description: 'Public verification endpoint (no authentication required)',
+        public: true
+      },
+      users: {
+        path: '/api/users',
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        description: 'User management endpoints',
+        public: false
+      },
+      reports: {
+        path: '/api/reports',
+        methods: ['GET'],
+        description: 'Reports and analytics endpoints',
+        public: false
+      },
+      audit: {
+        path: '/api/audit',
+        methods: ['GET'],
+        description: 'Audit log endpoints',
+        public: false
+      },
+      cbl: {
+        path: '/api/cbl',
+        methods: ['GET', 'POST', 'PUT'],
+        description: 'Central Bank of Liberia endpoints',
+        public: false,
+        roles: ['cbl', 'admin']
+      },
+      insurer: {
+        path: '/api/insurer',
+        methods: ['GET', 'POST', 'PUT'],
+        description: 'Insurer-specific endpoints',
+        public: false,
+        roles: ['insurer', 'admin']
+      },
+      insured: {
+        path: '/api/insured',
+        methods: ['GET', 'POST'],
+        description: 'Insured user endpoints',
+        public: false,
+        roles: ['insured', 'admin']
+      }
+    },
+    health: '/health',
+    documentation: 'See API documentation for details'
+  });
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 
