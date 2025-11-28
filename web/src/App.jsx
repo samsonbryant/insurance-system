@@ -46,11 +46,10 @@ function AppContent() {
       case 'cbl':
         return <CBLRoutes />
       case 'insurer':
+      case 'company': // Handle both 'insurer' and 'company' roles for insurance companies
         return <InsurerRoutes />
       case 'insured':
         return <InsuredRoutes />
-      case 'company':
-        return <CompanyRoutes />
       case 'officer':
         return <OfficerRoutes />
       default:
