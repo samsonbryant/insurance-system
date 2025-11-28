@@ -28,6 +28,8 @@ fly secrets set USE_SQLITE=true
 fly secrets set SQLITE_STORAGE=/data/dev.sqlite
 ```
 
+**Important:** The volume mount is configured in `fly.toml` to mount at `/data`. Make sure `SQLITE_STORAGE` points to `/data/dev.sqlite` to use the persistent volume.
+
 Or if using MySQL:
 ```bash
 fly secrets set DB_DIALECT=mysql
