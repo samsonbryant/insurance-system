@@ -106,14 +106,15 @@ app.get('/health', (req, res) => {
 // Make io available to routes
 app.set('io', io);
 
-// Root route - API info
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Insurance Verification & Authentication System (IVAS) API',
-    version: '1.0.0',
-    status: 'running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
+// Root route - API info (only in development, in production frontend is served)
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/', (req, res) => {
+    res.json({
+      message: 'Insurance Verification & Authentication System (IVAS) API',
+      version: '1.0.0',
+      status: 'running',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
     endpoints: {
       auth: {
         path: '/api/auth',
@@ -201,7 +202,8 @@ app.get('/', (req, res) => {
       documentation: 'https://docs.ivas.liberia.gov'
     }
   });
-});
+  });
+}
 
 // Health check endpoint
 app.get('/health', (req, res) => {
