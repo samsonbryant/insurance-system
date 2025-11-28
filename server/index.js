@@ -31,14 +31,16 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [
-      process.env.CLIENT_URL || "http://localhost:19006",
-      "http://localhost:8080",
-      "http://localhost:3001",
-      "http://localhost:3002",
-      "http://localhost:3003",
-      "http://localhost:5173"
-    ],
+    origin: process.env.NODE_ENV === 'production' 
+      ? true // Allow all origins in production (or specify your frontend domain)
+      : [
+          process.env.CLIENT_URL || "http://localhost:19006",
+          "http://localhost:8080",
+          "http://localhost:3001",
+          "http://localhost:3002",
+          "http://localhost:3003",
+          "http://localhost:5173"
+        ],
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -51,14 +53,16 @@ app.use(morgan('combined'));
 
 // CORS configuration (must run before rate limiting so preflight responses get headers)
 app.use(cors({
-  origin: [
-    process.env.CLIENT_URL || "http://localhost:19006",
-    "http://localhost:8080",
-    "http://localhost:3001",
-    "http://localhost:3002",
-    "http://localhost:3003",
-    "http://localhost:5173" // Vite default port
-  ],
+  origin: process.env.NODE_ENV === 'production'
+    ? true // Allow all origins in production (or specify your frontend domain: ["https://your-frontend-domain.com"])
+    : [
+        process.env.CLIENT_URL || "http://localhost:19006",
+        "http://localhost:8080",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://localhost:3003",
+        "http://localhost:5173" // Vite default port
+      ],
   credentials: true
 }));
 
