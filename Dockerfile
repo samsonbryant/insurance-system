@@ -1,19 +1,17 @@
 FROM node:18-alpine AS builder
 
-WORKDIR /app
+WORKDIR /app/web
 
-# Copy package files for root and web
-COPY package*.json ./
-COPY web/package*.json ./web/
+# Copy web package files
+COPY web/package*.json ./
 
-# Install all dependencies (including dev dependencies for building)
+# Install web dependencies (including dev dependencies for building)
 RUN npm ci
 
 # Copy web source files
-COPY web/ ./web/
+COPY web/ ./
 
 # Build the frontend
-WORKDIR /app/web
 RUN npm run build
 
 # Production stage
