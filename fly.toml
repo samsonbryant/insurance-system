@@ -27,7 +27,6 @@ primary_region = "iad"
   cpus = 1
   memory_mb = 512
 
-[mounts]
+[[mounts]]
   source = "insurance_system_data"
   destination = "/data"
-
