@@ -12,7 +12,8 @@ coverage
 .vscode
 .idea
 mobile
-web
+web/node_modules
+web/dist
 tests
 *.md
 !README.md

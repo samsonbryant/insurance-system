@@ -454,15 +454,37 @@ io.on('connection', (socket) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ 
-    error: 'Route not found',
-    path: req.originalUrl 
+// Serve frontend static files in production
+if (process.env.NODE_ENV === 'production') {
+  const path = require('path');
+  const frontendDistPath = path.join(__dirname, '..', 'web', 'dist');
+  
+  // Serve static files from the React app build
+  app.use(express.static(frontendDistPath));
+  
+  // Handle React routing - return index.html for all non-API routes
+  app.get('*', (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({
+        success: false,
+        error: 'Route not found',
+        path: req.originalUrl 
+      });
+    }
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
   });
-});
+} else {
+  // 404 handler for development (when frontend is served separately)
+  app.use('*', (req, res) => {
+    res.status(404).json({ 
+      error: 'Route not found',
+      path: req.originalUrl 
+    });
+  });
+}
 
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3000;
 
 // Database connection and server startup
 async function startServer() {
