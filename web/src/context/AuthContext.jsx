@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
           // Connect to real-time service
           realTimeService.connect(token)
         } catch (tokenError) {
-          console.log('Token validation failed, clearing auth data')
+          console.log('Token validation failed, clearing auth data', tokenError?.message || tokenError)
           localStorage.removeItem('accessToken')
           localStorage.removeItem('refreshToken')
           localStorage.removeItem('user')
@@ -50,9 +50,12 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error checking auth status:', error)
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('user')
+      // Don't clear storage on network errors, only on auth errors
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('user')
+      }
       setUser(null)
       setIsAuthenticated(false)
     } finally {
