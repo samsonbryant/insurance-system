@@ -1,0 +1,21 @@
+{
+  "development": {
+    "dialect": "sqlite",
+    "storage": "./dev.sqlite",
+    "logging": true
+  },
+  "test": {
+    "dialect": "sqlite",
+    "storage": ":memory:",
+    "logging": false
+  },
+  "production": {
+    "username": "root",
+    "password": "",
+    "database": "ivas_db",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "dialect": "mysql",
+    "logging": false
+  }
+}

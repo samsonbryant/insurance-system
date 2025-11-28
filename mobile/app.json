@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "IVAS Mobile",
+    "slug": "ivas-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ivas.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.ivas.mobile"
+    },
+    "web": {},
+    "plugins": [
+      "expo-camera",
+      "expo-location",
+      "expo-barcode-scanner"
+    ]
+  }
+}
