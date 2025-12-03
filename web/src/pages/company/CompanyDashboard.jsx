@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { companyAPI, policiesAPI } from '../../services/api'
 import { useRealTime, useRealTimeEvents } from '../../services/realTimeService'
 import toast from 'react-hot-toast'
 import { FileText, BarChart3, RefreshCw, Wifi, WifiOff, Plus } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 const CompanyDashboard = () => {
   const navigate = useNavigate()
@@ -13,16 +14,7 @@ const CompanyDashboard = () => {
   const [loading, setLoading] = useState(true)
   const { isConnected } = useRealTime()
 
-  useRealTimeEvents({
-    'policyUpdate': () => loadDashboardData(),
-    'companyStatusUpdate': () => loadDashboardData(),
-  })
-
-  useEffect(() => {
-    loadDashboardData()
-  }, [])
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true)
       const companyId = user?.company_id
@@ -42,7 +34,26 @@ const CompanyDashboard = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.company_id])
+
+  // Real-time event handlers
+  const handleRealTimeUpdate = useCallback(() => {
+    loadDashboardData()
+  }, [loadDashboardData])
+
+  useRealTimeEvents({
+    'policyUpdate': handleRealTimeUpdate,
+    'policy-approved': handleRealTimeUpdate,
+    'policy-declined': handleRealTimeUpdate,
+    'verificationUpdate': handleRealTimeUpdate,
+    'new_verification': handleRealTimeUpdate,
+    'claimUpdate': handleRealTimeUpdate,
+    'companyStatusUpdate': handleRealTimeUpdate,
+  })
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [loadDashboardData])
 
   const StatCard = ({ title, value, icon: Icon, color, onClick, subtitle }) => (
     <div
@@ -72,6 +83,12 @@ const CompanyDashboard = () => {
   }
 
   const stats = dashboardData || {}
+  const chartData = useMemo(() => [
+    { name: 'Total Policies', value: stats.totalPolicies || 0 },
+    { name: 'Active Policies', value: stats.activePolicies || 0 },
+    { name: 'Policies This Month', value: stats.policiesThisMonth || 0 },
+    { name: 'Total Users', value: stats.totalUsers || 0 },
+  ], [stats.totalPolicies, stats.activePolicies, stats.policiesThisMonth, stats.totalUsers])
 
   return (
     <div className="space-y-6">
@@ -122,6 +139,19 @@ const CompanyDashboard = () => {
           color="#8b5cf6"
           subtitle={stats.lastSync ? new Date(stats.lastSync).toLocaleDateString() : 'Never'}
         />
+      </div>
+
+      <div className="card">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Overview</h2>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="value" fill="#3b82f6" />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
       <div className="card">

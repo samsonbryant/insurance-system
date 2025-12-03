@@ -15,11 +15,19 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL?.replace('/api', '') || 'https://insurance-system.fly.dev',
+        target: process.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000',
         changeOrigin: true,
-        secure: true,
+        secure: false,
         ws: true,
-        rewrite: (path) => path.replace(/^\/api/, '/api'),
+        timeout: 10000,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, res) => {
+            console.log('Proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Proxying request:', req.method, req.url);
+          });
+        },
       },
     },
   },

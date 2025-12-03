@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { insuredAPI } from '../../services/api'
 import { useRealTimeEvents } from '../../services/realTimeService'
 import toast from 'react-hot-toast'
@@ -11,19 +11,7 @@ const InsuredHistory = () => {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
-  useRealTimeEvents({
-    'verificationUpdate': () => loadHistory(),
-  })
-
-  useEffect(() => {
-    loadHistory()
-  }, [])
-
-  useEffect(() => {
-    filterHistory()
-  }, [history, searchQuery])
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     try {
       setLoading(true)
       const response = await insuredAPI.getVerificationHistory({ limit: 100 })
@@ -34,9 +22,9 @@ const InsuredHistory = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const filterHistory = () => {
+  const filterHistory = useCallback(() => {
     if (!searchQuery.trim()) {
       setFilteredHistory(history)
       return
@@ -46,7 +34,21 @@ const InsuredHistory = () => {
       item.status?.toLowerCase().includes(searchQuery.toLowerCase())
     )
     setFilteredHistory(filtered)
-  }
+  }, [history, searchQuery])
+
+  const events = useMemo(() => ({
+    'verificationUpdate': loadHistory,
+  }), [loadHistory])
+
+  useRealTimeEvents(events)
+
+  useEffect(() => {
+    loadHistory()
+  }, [loadHistory])
+
+  useEffect(() => {
+    filterHistory()
+  }, [filterHistory])
 
   const getStatusBadge = (status) => {
     const statusConfig = {

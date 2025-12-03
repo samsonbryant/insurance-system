@@ -1,9 +1,16 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { insurerAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Save } from 'lucide-react'
 import { INSURANCE_TYPES } from '../../utils/insuranceTypes'
+import { generateHolderID } from '../../utils/exportUtils'
+
+const COVERAGE_TYPES = [
+  { value: 'treaty', label: 'Treaty' },
+  { value: 'facultative', label: 'Facultative' },
+  { value: 'co_insured', label: 'Co-Insured' },
+]
 
 const AddPolicy = () => {
   const navigate = useNavigate()
@@ -14,17 +21,40 @@ const AddPolicy = () => {
     holder_phone: '',
     holder_email: '',
     policy_type: 'auto',
-    coverage_amount: '',
+    coverage_type: '',
+    reinsurance_number: '',
     premium_amount: '',
     start_date: '',
     expiry_date: '',
   })
 
+  // Auto-generate holder ID when component mounts or when Add Policy button is clicked
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      holder_id_number: generateHolderID()
+    }))
+  }, [])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validate reinsurance number if coverage type is selected
+    if (formData.coverage_type && !formData.reinsurance_number) {
+      toast.error('Reinsurance Number is required when Coverage Type is selected')
+      return
+    }
+    
     try {
       setLoading(true)
-      await insurerAPI.createPolicy(formData)
+      // Map coverage_type to coverage_amount for backward compatibility
+      const policyData = {
+        ...formData,
+        coverage_amount: formData.coverage_type, // Store coverage type
+        coverage_type: formData.coverage_type,
+        reinsurance_number: formData.reinsurance_number,
+      }
+      await insurerAPI.createPolicy(policyData)
       toast.success('Policy created successfully')
       navigate('/policies')
     } catch (error) {
@@ -50,7 +80,7 @@ const AddPolicy = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="card space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${formData.coverage_type ? '' : ''}`}>
           <div>
             <label className="label">Policy Type *</label>
             <select
@@ -82,11 +112,13 @@ const AddPolicy = () => {
             <label className="label">Holder ID Number *</label>
             <input
               type="text"
-              className="input"
+              className="input bg-gray-50"
               value={formData.holder_id_number}
-              onChange={(e) => setFormData({ ...formData, holder_id_number: e.target.value })}
+              readOnly
               required
+              title="Auto-generated - cannot be changed"
             />
+            <p className="text-xs text-gray-500 mt-1">Auto-generated - cannot be changed</p>
           </div>
 
           <div>
@@ -110,17 +142,35 @@ const AddPolicy = () => {
           </div>
 
           <div>
-            <label className="label">Coverage Amount *</label>
-            <input
-              type="number"
+            <label className="label">Coverage *</label>
+            <select
               className="input"
-              value={formData.coverage_amount}
-              onChange={(e) => setFormData({ ...formData, coverage_amount: e.target.value })}
+              value={formData.coverage_type}
+              onChange={(e) => setFormData({ ...formData, coverage_type: e.target.value, reinsurance_number: '' })}
               required
-              min="0"
-              step="0.01"
-            />
+            >
+              <option value="">Select Coverage Type</option>
+              {COVERAGE_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
           </div>
+
+          {formData.coverage_type && (
+            <div>
+              <label className="label">Reinsurance No. *</label>
+              <input
+                type="text"
+                className="input"
+                value={formData.reinsurance_number}
+                onChange={(e) => setFormData({ ...formData, reinsurance_number: e.target.value })}
+                required
+                placeholder={`Enter ${COVERAGE_TYPES.find(t => t.value === formData.coverage_type)?.label} Reinsurance Number`}
+              />
+            </div>
+          )}
 
           <div>
             <label className="label">Premium Amount *</label>

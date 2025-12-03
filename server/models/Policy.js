@@ -50,6 +50,17 @@ const Policy = sequelize.define('Policy', {
     type: DataTypes.DECIMAL(15, 2),
     allowNull: true
   },
+  coverage_type: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    validate: {
+      isIn: [['treaty', 'facultative', 'co_insured', null, '']]
+    }
+  },
+  reinsurance_number: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+  },
   premium_amount: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: true

@@ -1,25 +1,18 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { companyAPI, policiesAPI } from '../../services/api'
-import { useRealTimeEvents } from '../../services/realTimeService'
+import { useRealTimeEvents, useRealTime } from '../../services/realTimeService'
 import toast from 'react-hot-toast'
-import { BarChart3, RefreshCw, FileText, Users } from 'lucide-react'
+import { BarChart3, RefreshCw, FileText, Users, Wifi, WifiOff } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 const CompanyReports = () => {
   const { user } = useAuth()
   const [reportData, setReportData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { isConnected } = useRealTime()
 
-  useRealTimeEvents({
-    'policyUpdate': () => loadReports(),
-  })
-
-  useEffect(() => {
-    loadReports()
-  }, [])
-
-  const loadReports = async () => {
+  const loadReports = useCallback(async () => {
     try {
       setLoading(true)
       const companyId = user?.company_id
@@ -39,7 +32,26 @@ const CompanyReports = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.company_id])
+
+  // Real-time event handlers
+  const handleRealTimeUpdate = useCallback(() => {
+    loadReports()
+  }, [loadReports])
+
+  useRealTimeEvents({
+    'policyUpdate': handleRealTimeUpdate,
+    'policy-approved': handleRealTimeUpdate,
+    'policy-declined': handleRealTimeUpdate,
+    'verificationUpdate': handleRealTimeUpdate,
+    'new_verification': handleRealTimeUpdate,
+    'claimUpdate': handleRealTimeUpdate,
+    'companyStatusUpdate': handleRealTimeUpdate,
+  })
+
+  useEffect(() => {
+    loadReports()
+  }, [loadReports])
 
   if (loading) {
     return (
@@ -50,16 +62,23 @@ const CompanyReports = () => {
   }
 
   const stats = reportData || {}
-  const chartData = [
+  const chartData = useMemo(() => [
     { name: 'Total Policies', value: stats.totalPolicies || 0 },
     { name: 'Active Policies', value: stats.activePolicies || 0 },
     { name: 'Total Users', value: stats.totalUsers || 0 },
-  ]
+  ], [stats.totalPolicies, stats.activePolicies, stats.totalUsers])
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Reports & Analytics</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-gray-900">Reports & Analytics</h1>
+          {isConnected ? (
+            <Wifi className="h-5 w-5 text-green-500" title="Real-time connected" />
+          ) : (
+            <WifiOff className="h-5 w-5 text-gray-400" title="Real-time disconnected" />
+          )}
+        </div>
         <button
           onClick={loadReports}
           className="btn btn-secondary flex items-center gap-2"

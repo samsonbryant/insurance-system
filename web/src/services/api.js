@@ -5,7 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'ht
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 10000, // Reduced from 30s to 10s for faster error feedback
   headers: {
     'Content-Type': 'application/json',
   },
@@ -486,6 +486,21 @@ export const insurerAPI = {
 
   getReportsSummary: async () => {
     const response = await api.get('/insurer/reports/summary')
+    return response.data
+  },
+
+  getReinsuranceReport: async (params = {}) => {
+    const response = await api.get('/insurer/reports/reinsurance', { params })
+    return response.data
+  },
+
+  getCBLReports: async (params = {}) => {
+    const response = await api.get('/insurer/reports/cbl', { params })
+    return response.data
+  },
+
+  createCBLReport: async (reportData) => {
+    const response = await api.post('/insurer/reports/cbl', reportData)
     return response.data
   },
 

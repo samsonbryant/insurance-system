@@ -18,7 +18,27 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    checkAuthStatus()
+    let isMounted = true
+    let timeoutId
+    
+    // Set a maximum timeout to ensure loading state is cleared
+    timeoutId = setTimeout(() => {
+      if (isMounted) {
+        console.warn('Auth check taking too long, clearing loading state')
+        setLoading(false)
+      }
+    }, 10000) // 10 second maximum
+
+    checkAuthStatus().finally(() => {
+      if (isMounted) {
+        clearTimeout(timeoutId)
+      }
+    })
+
+    return () => {
+      isMounted = false
+      clearTimeout(timeoutId)
+    }
   }, [])
 
   const checkAuthStatus = async () => {
@@ -28,8 +48,13 @@ export const AuthProvider = ({ children }) => {
       
       if (token && userData) {
         try {
-          // Validate token by making a test API call
-          await authAPI.getProfile()
+          // Validate token by making a test API call with timeout
+          const profilePromise = authAPI.getProfile()
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timeout')), 5000)
+          )
+          
+          await Promise.race([profilePromise, timeoutPromise])
           const parsedUser = JSON.parse(userData)
           setUser(parsedUser)
           setIsAuthenticated(true)
@@ -38,11 +63,19 @@ export const AuthProvider = ({ children }) => {
           realTimeService.connect(token)
         } catch (tokenError) {
           console.log('Token validation failed, clearing auth data', tokenError?.message || tokenError)
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
-          localStorage.removeItem('user')
-          setUser(null)
-          setIsAuthenticated(false)
+          // If it's a timeout or network error, don't clear - just set as unauthenticated
+          if (tokenError.message === 'Request timeout' || !tokenError.response) {
+            // Network error - keep user data but mark as unauthenticated
+            setUser(null)
+            setIsAuthenticated(false)
+          } else {
+            // Auth error - clear everything
+            localStorage.removeItem('accessToken')
+            localStorage.removeItem('refreshToken')
+            localStorage.removeItem('user')
+            setUser(null)
+            setIsAuthenticated(false)
+          }
         }
       } else {
         setUser(null)
